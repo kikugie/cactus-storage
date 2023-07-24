@@ -1,0 +1,237 @@
+import net.darkhax.curseforgegradle.TaskPublishCurseForge
+
+apply plugin: "maven-publish"
+apply plugin: "fabric-loom"
+apply plugin: "com.replaymod.preprocess"
+apply plugin: "me.fallenbreath.yamlang"
+apply plugin: "io.github.juuxel.loom-vineflower"
+apply plugin: "com.modrinth.minotaur"
+apply plugin: "com.github.breadmoirai.github-release"
+apply plugin: "net.darkhax.curseforgegradle"
+
+int mcVersion = project.mcVersion
+
+preprocess {
+    tabIndentation = false
+}
+
+repositories {
+    maven { url "https://jitpack.io" }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Curseforge"
+                url = "https://www.cursemaven.com"
+            }
+        }
+        filter {
+            includeGroup "curse.maven"
+        }
+    }
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = "Modrinth"
+                url = "https://api.modrinth.com/maven"
+            }
+        }
+        filter {
+            includeGroup "maven.modrinth"
+        }
+    }
+    maven {
+        name = "Gradle Plugin Portal"
+        url = "https://plugins.gradle.org/m2/"
+    }
+//	maven {
+//		name = "TerraformersMC"
+//		url "https://maven.terraformersmc.com/releases/"
+//	}
+}
+
+// https://github.com/FabricMC/fabric-loader/issues/783
+configurations {
+    modRuntimeOnly.exclude group: "net.fabricmc", module: "fabric-loader"
+}
+
+dependencies {
+    // loom
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // dependencies
+//	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_api_version}"
+    // example module import
+//  modImplementation fabricApi.module("fabric-command-api-${mcVersion > 11802 ? "v2" : "v1"}", project.fabric_api_version)
+
+//	modApi "com.terraformersmc:modmenu:${project.modmenu_version}"
+
+    // mixin extensions
+// 	include api(annotationProcessor("com.github.LlamaLad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
+}
+
+loom {
+    runConfigs.all {
+        // to make sure it generates all "Minecraft Client (:subproject_name)" applications
+        ideConfigGenerated = true
+        runDir "../../run"
+        vmArgs "-Dmixin.debug.export=true"
+    }
+}
+
+remapJar {
+    remapperIsolation = true
+}
+
+if (mcVersion >= 11800) {
+	sourceCompatibility = JavaVersion.VERSION_17
+	targetCompatibility = JavaVersion.VERSION_17
+} else if (mcVersion >= 11700) {
+	sourceCompatibility = JavaVersion.VERSION_16
+	targetCompatibility = JavaVersion.VERSION_16
+} else {
+	sourceCompatibility = JavaVersion.VERSION_1_8
+	targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+version = project.mod_version
+group = project.maven_group
+archivesBaseName = project.archives_base_name + "-" + project.mod_version + "+" + project.title_version
+
+// See https://youtrack.jetbrains.com/issue/IDEA-296490
+// if IDEA complains about "Cannot resolve resource filtering of MatchingCopyAction" and you want to know why
+processResources {
+    inputs.property "version", project.mod_version
+    inputs.property "id", project.mod_id
+    inputs.property "name", project.mod_name
+    inputs.property "minecraft_dependency", project.minecraft_dependency
+
+    filesMatching("fabric.mod.json") {
+        def valueMap = [
+                "id"                  : project.mod_id,
+                "name"                : project.mod_name,
+                "version"             : project.mod_version,
+                "minecraft_dependency": project.minecraft_dependency,
+        ]
+        expand valueMap
+    }
+}
+
+// https://github.com/Fallen-Breath/yamlang
+yamlang {
+    targetSourceSets = [sourceSets.main]
+    inputDir = "assets/${project.mod_id}/lang"
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = "UTF-8"
+}
+
+java {
+    withSourcesJar()
+}
+
+jar {
+    from(rootProject.file("LICENSE")) {
+        rename { "${it}_${project.archivesBaseName}" }
+    }
+}
+
+def debug = false
+
+tasks.register("release") {
+    debug = false
+    group("publishing")
+    dependsOn("modrinth")
+    dependsOn("githubRelease")
+    dependsOn("publishing")
+}
+
+tasks.register("debugRelease") {
+    debug = true
+    group("publishing")
+    dependsOn("modrinth")
+    dependsOn("githubRelease")
+}
+
+modrinth {
+    token = project.findProperty("modrinthToken")
+    projectId = project.mod_id
+    versionName = "${project.mod_name} ${project.mod_version} for ${project.title_version}"
+    versionNumber = project.mod_version
+    versionType = project.release_type
+    uploadFile = remapJar
+    additionalFiles = [sourcesJar]
+    //noinspection GroovyAssignabilityCheck
+    gameVersions = project.release_versions.split(" ").toList()
+    loaders = ["fabric", "quilt"]
+    dependencies {
+
+    }
+    syncBodyFrom = rootProject.file("README.md").text
+    changelog = rootProject.file("CHANGELOG.md").text
+    failSilently = true
+    debugMode = debug
+}
+
+githubRelease {
+    token = project.findProperty("githubToken")
+    owner = project.repo_owner
+    repo = project.mod_id
+    tagName = "v${project.mod_version}"
+    targetCommitish = "multi"
+    releaseName = "${project.mod_name} ${project.mod_version}"
+    body = rootProject.file("CHANGELOG.md").text
+    draft = mcVersion > 11605 // first file should be false
+    releaseAssets = [remapJar, sourcesJar]
+    prerelease = project.release_type != "release"
+    allowUploadToExisting = true // allows publishing multiple files
+    dryRun = debug
+}
+
+tasks.register("curseforge", TaskPublishCurseForge) {
+    group "publishing"
+    disableVersionDetection()
+    apiToken = project.findProperty("curseforgeToken")
+
+    def mainFile = upload(project.project_id, remapJar)
+    mainFile.releaseType = release_type
+    mainFile.displayName = "${project.mod_name} ${project.mod_version} for ${project.title_version}"
+    mainFile.changelog = rootProject.file("CHANGELOG.md").text
+    mainFile.changelogType = "markdown"
+    mainFile.addModLoader "fabric", "quilt"
+    for (String version : project.release_versions.split(" ")) {
+        mainFile.addGameVersion version
+    }
+    debugMode = debug
+}
+
+// configure the maven publication
+publishing {
+    repositories {
+        maven {
+            name = "kikugieMaven"
+            url = "https://maven.kikugie.dev/releases"
+            credentials(PasswordCredentials)
+            authentication {
+                basic(BasicAuthentication)
+            }
+        }
+    }
+
+    publications {
+        mavenJava(MavenPublication) {
+            groupId = project.maven_group + "." + project.archives_base_name
+            artifactId = project.mod_version
+            version = project.title_version
+
+            from components.java
+        }
+    }
+}
