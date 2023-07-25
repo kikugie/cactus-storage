@@ -1,9 +1,12 @@
 {
   "required": true,
   "minVersion": "0.8",
-  "package": "dev.kikugie.cactus_storage.mixins",
+  "package": "dev.kikugie.cactus_storage.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "CactusBlockMixin",
+    "ItemEntityMixin",
+    "Object2LongOpenHashMapAccessor"
   ],
   "injectors": {
     "defaultRequire": 1

@@ -22,9 +22,7 @@
   ],
   "depends": {
     "fabricloader": ">=0.11.4",
-    "minecraft": "${minecraft_dependency}"
-  },
-  "recommend": {
-    "command_config_lib": "<0.2.0"
+    "minecraft": "${minecraft_dependency}",
+    "carpet": "1.4.x"
   }
 }

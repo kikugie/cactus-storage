@@ -43,7 +43,10 @@ repositories {
         name = "Gradle Plugin Portal"
         url = "https://plugins.gradle.org/m2/"
     }
-    maven { url "https://maven.kikugie.dev/releases" }
+    maven {
+        name = "Masa Maven"
+        url = "https://masa.dy.fi/maven"
+    }
 }
 
 // https://github.com/FabricMC/fabric-loader/issues/783
@@ -57,11 +60,14 @@ dependencies {
     mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
     modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
-    modImplementation fabricApi.module("fabric-command-api-${mcVersion > 11802 ? "v2" : "v1"}", project.fabric_api_version)
-    modImplementation include("dev.kikugie.command-config:${project.cmd_config_version}:${project.cmd_config_mc}")
+    modImplementation fabricApi.module("fabric-transfer-api-v1", project.fabric_api_version)
+    if (mcVersion < 12000)
+        modImplementation "carpet:fabric-carpet:${project.carpet_version}"
+    else
+        modImplementation "maven.modrinth:carpet:${project.carpet_version}"
 
     // mixin extensions
-// 	include api(annotationProcessor("com.github.LlamaLad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
+ 	include api(annotationProcessor("com.github.LlamaLad7.mixinextras:mixinextras-fabric:${project.mixin_extras_version}"))
 }
 
 loom {
