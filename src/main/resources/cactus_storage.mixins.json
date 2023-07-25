@@ -6,7 +6,8 @@
   "mixins": [
     "CactusBlockMixin",
     "ItemEntityMixin",
-    "Object2LongOpenHashMapAccessor"
+    "Object2LongOpenHashMapAccessor",
+    "PersistentStateManagerInvoker"
   ],
   "injectors": {
     "defaultRequire": 1

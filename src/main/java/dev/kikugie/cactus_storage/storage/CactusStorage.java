@@ -1,5 +1,6 @@
 package dev.kikugie.cactus_storage.storage;
 
+import dev.kikugie.cactus_storage.CactusStorageMod;
 import dev.kikugie.cactus_storage.util.ConverterIterator;
 import dev.kikugie.cactus_storage.util.RandomizedIterator;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
@@ -38,7 +39,7 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
     }
 
     public static NbtCompound save(NbtCompound nbt) {
-        nbt.put(STORAGE_KEY, GLOBAL_STORAGE.contents.serialize());
+        nbt.put(STORAGE_KEY, GLOBAL_STORAGE == null ? new NbtList() : GLOBAL_STORAGE.contents.serialize());
         return nbt;
     }
 
@@ -52,6 +53,12 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
 
     public static Storage<ItemVariant> global() {
         return GLOBAL_STORAGE;
+    }
+
+
+    @Override
+    protected void onFinalCommit() {
+        CactusStorageMod.markStorageDirty();
     }
 
     @Override
