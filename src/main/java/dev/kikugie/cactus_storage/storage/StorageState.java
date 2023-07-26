@@ -12,6 +12,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class StorageState extends PersistentState {
+    private static StorageState instance;
+
+    public static void setInstance(StorageState state) {
+        instance = state;
+    }
+
+    public static void markStorageDirty() {
+        if (instance != null)
+            instance.markDirty();
+    }
+
     public StorageState() {
         super(Reference.MOD_ID);
     }

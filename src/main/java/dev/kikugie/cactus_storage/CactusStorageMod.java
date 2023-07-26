@@ -1,5 +1,6 @@
 package dev.kikugie.cactus_storage;
 
+import dev.kikugie.cactus_storage.carpet.CactusStorageExtension;
 import dev.kikugie.cactus_storage.storage.CactusStorage;
 import dev.kikugie.cactus_storage.storage.StorageState;
 import net.fabricmc.api.ModInitializer;
@@ -14,7 +15,6 @@ import java.io.IOException;
 
 public class CactusStorageMod implements ModInitializer {
     public static final Logger LOGGER = LogManager.getLogger(Reference.MOD_ID);
-    private static StorageState storageState;
 
     @SuppressWarnings("UnstableApiUsage")
     @Override
@@ -22,19 +22,15 @@ public class CactusStorageMod implements ModInitializer {
         ItemStorage.SIDED.registerForBlocks((world, pos, state, blockEntity, direction) -> CactusStorage.get(direction), Blocks.CACTUS);
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             PersistentStateManager manager = server.getOverworld().getPersistentStateManager();
-            storageState = manager.getOrCreate(() -> {
+            StorageState.setInstance(manager.getOrCreate(() -> {
                 try {
                     return StorageState.getOrCreate(manager);
                 } catch (IOException e) {
                     LOGGER.error("Cactus storage data is corrupted! Fix it or delete the file in `<world>/data/cactus_storage.dat`.");
                     throw new RuntimeException(e);
                 }
-            }, Reference.MOD_ID);
+            }, Reference.MOD_ID));
         });
-    }
-
-    public static void markStorageDirty() {
-        if (storageState != null)
-            storageState.markDirty();
+        CactusStorageExtension.init();
     }
 }

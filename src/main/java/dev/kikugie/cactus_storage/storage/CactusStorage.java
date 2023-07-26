@@ -1,6 +1,5 @@
 package dev.kikugie.cactus_storage.storage;
 
-import dev.kikugie.cactus_storage.CactusStorageMod;
 import dev.kikugie.cactus_storage.util.ConverterIterator;
 import dev.kikugie.cactus_storage.util.RandomizedIterator;
 import it.unimi.dsi.fastutil.objects.Object2LongOpenHashMap;
@@ -18,16 +17,13 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Iterator;
+import java.util.Objects;
 
 @SuppressWarnings("UnstableApiUsage")
 public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> implements Storage<ItemVariant> {
-    private static CactusStorage GLOBAL_STORAGE;
     private static final String STORAGE_KEY = "storage";
+    private static CactusStorage GLOBAL_STORAGE;
     private Contents contents;
-
-    public CactusStorage() {
-        this.contents = new Contents();
-    }
 
     public CactusStorage(Contents contents) {
         this.contents = contents;
@@ -45,20 +41,18 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
 
     @Nullable
     public static Storage<ItemVariant> get(Direction direction) {
-        return GLOBAL_STORAGE;
-
-//        Objects.requireNonNull(direction);
-//        return direction == Direction.DOWN ? GLOBAL_STORAGE : null;
+        Objects.requireNonNull(direction);
+        return direction == Direction.DOWN ? GLOBAL_STORAGE : null;
     }
 
-    public static Storage<ItemVariant> global() {
+    public static Storage<ItemVariant> get() {
         return GLOBAL_STORAGE;
     }
 
 
     @Override
     protected void onFinalCommit() {
-        CactusStorageMod.markStorageDirty();
+        StorageState.markStorageDirty();
     }
 
     @Override
@@ -69,6 +63,11 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
     @Override
     protected void readSnapshot(Contents snapshot) {
         this.contents = snapshot;
+    }
+
+    @Override
+    public boolean supportsInsertion() {
+        return false;
     }
 
     @Override
@@ -137,10 +136,6 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
         public static final String AMOUNT_KEY = "amount";
         @NotNull
         private final Object2LongOpenHashMap<ItemVariant> entries;
-
-        public Contents() {
-            this.entries = new Object2LongOpenHashMap<>();
-        }
 
         public Contents(@NotNull Object2LongOpenHashMap<ItemVariant> entries) {
             this.entries = entries;
