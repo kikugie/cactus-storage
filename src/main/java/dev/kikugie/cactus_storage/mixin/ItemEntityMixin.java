@@ -2,6 +2,7 @@ package dev.kikugie.cactus_storage.mixin;
 
 import dev.kikugie.cactus_storage.carpet.CactusStorageSettings;
 import dev.kikugie.cactus_storage.storage.CactusStorage;
+import dev.kikugie.cactus_storage.util.InventoryUtil;
 import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.transaction.Transaction;
 import net.minecraft.entity.Entity;
@@ -37,11 +38,15 @@ public abstract class ItemEntityMixin extends Entity {
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;discard()V"))
     private void cactus_storage$addToCactusStorage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (!CactusStorageSettings.cactusStorage
+                //#if MC < 11900
                 || source != DamageSource.CACTUS
+                //#else
+                //$$ || !source.isOf(net.minecraft.entity.damage.DamageTypes.CACTUS)
+                //#endif
                 || !(this.getEntityWorld() instanceof ServerWorld))
             return;
 
-        ItemStack stack = getStack();
+        ItemStack stack = InventoryUtil.cleanContents(getStack());
         try (Transaction transaction = Transaction.openOuter()) {
             CactusStorage.get().insert(ItemVariant.of(stack), stack.getCount(), transaction);
             transaction.commit();

@@ -24,19 +24,17 @@ import java.util.*;
 public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> implements ExtractionOnlyStorage<ItemVariant> {
     private static final String STORAGE_KEY = "storage";
     private static CactusStorage GLOBAL_STORAGE;
+    private final StorageState saveManager;
     private Contents contents;
 
-    private CactusStorage(Contents contents) {
+    private CactusStorage(Contents contents, StorageState saveManager) {
         this.contents = contents;
+        this.saveManager = saveManager;
     }
 
-    public static void load(NbtCompound nbt) {
-        NbtList list = nbt.getList(STORAGE_KEY, nbt.getType());
-        GLOBAL_STORAGE = new CactusStorage(Contents.deserialize(list));
-    }
-
-    public static void create() {
-        GLOBAL_STORAGE = new CactusStorage(new Contents(new Object2LongOpenHashMap<>()));
+    public static void load(@Nullable NbtCompound nbt, StorageState saveManager) {
+        NbtList list = nbt == null ? new NbtList() : nbt.getList(STORAGE_KEY, nbt.getType());
+        GLOBAL_STORAGE = new CactusStorage(Contents.deserialize(list), saveManager);
     }
 
     public static NbtCompound save(NbtCompound nbt) {
@@ -66,7 +64,7 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
 
     @Override
     protected void onFinalCommit() {
-        StorageState.markStorageDirty();
+        saveManager.markDirty();
     }
 
     @Override
@@ -96,12 +94,24 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
     }
 
     @Override
-    public Iterator<StorageView<ItemVariant>> iterator(TransactionContext transaction) {
-        return new ConverterIterator<>(RandomizedIterator.from(this.contents.entries), variant -> exactView(transaction, variant));
+    public Iterator<StorageView<ItemVariant>> iterator(
+            //#if MC < 11900
+            TransactionContext transaction
+            //#endif
+    ) {
+        return new ConverterIterator<>(RandomizedIterator.from(this.contents.entries), variant -> exactView(
+                //#if MC < 11900
+                transaction,
+                //#endif
+                variant));
     }
 
     @Override
-    public StorageView<ItemVariant> exactView(TransactionContext transaction, ItemVariant resource) {
+    public StorageView<ItemVariant> exactView(
+            //#if MC < 11900
+            TransactionContext transaction,
+            //#endif
+            ItemVariant resource) {
         return new CactusStorageView(this, resource);
     }
 

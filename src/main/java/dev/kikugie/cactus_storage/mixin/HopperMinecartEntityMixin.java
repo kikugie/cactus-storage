@@ -32,7 +32,7 @@ public class HopperMinecartEntityMixin {
         if (result)
             return true;
 
-        BlockPos invPos = new BlockPos(hopper.getHopperX(), Math.ceil(hopper.getHopperY()), hopper.getHopperZ());
+        BlockPos invPos = new BlockPos((int) hopper.getHopperX(), (int) Math.ceil(hopper.getHopperY()), (int) hopper.getHopperZ());
         BlockState target = world.getBlockState(invPos);
         BlockState target2 = world.getBlockState(invPos.offset(Direction.UP));
 

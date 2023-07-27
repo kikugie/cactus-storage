@@ -20,10 +20,10 @@ public class CactusStorageMod implements ModInitializer {
         ItemStorage.SIDED.registerForBlocks((world, pos, state, blockEntity, direction) -> CactusStorage.get(direction), Blocks.CACTUS);
         ServerLifecycleEvents.SERVER_STARTED.register(server -> {
             PersistentStateManager manager = server.getOverworld().getPersistentStateManager();
-            StorageState.setInstance(manager.getOrCreate(
-                    (nbt) -> StorageState.fromNbt(nbt, manager),
-                    () -> StorageState.create(manager),
-                    Reference.MOD_ID));
+            manager.getOrCreate(
+                    nbt -> StorageState.create(nbt, manager),
+                    () -> StorageState.create(null, manager),
+                    Reference.MOD_ID);
         });
         CactusStorageExtension.init();
     }
