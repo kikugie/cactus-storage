@@ -22,11 +22,11 @@ public class CactusStorageSettings {
     public static boolean allowCactusOnHoppers = false;
 
     @Rule(category = {CACTUS, RuleCategory.FEATURE}, desc = """
-            Drop ALL cactus storage contents when a cactus is broken by a player without silk touch.
+            Drop all cactus storage contents when a cactus is broken by a player without silk touch.
             Doesn't affect creative mode.""")
     public static boolean dropCactusContents = false;
 
     @Rule(category = {CACTUS, RuleCategory.FEATURE}, desc = """
-            Drop cactus contents when ANY cactus is broken.""")
+            Drop cactus contents when any cactus is broken.""")
     public static boolean alwaysDropCactusContents = false;
 }

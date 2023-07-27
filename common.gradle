@@ -161,17 +161,18 @@ tasks.register("debugRelease") {
 
 modrinth {
     token = project.findProperty("modrinthToken")
-    projectId = project.mod_id
+    projectId = project.archives_base_name
     versionName = "${project.mod_name} ${project.mod_version} for ${project.title_version}"
-    versionNumber = project.mod_version
+    versionNumber = "${project.mod_version}+${project.title_version}"
     versionType = project.release_type
-    uploadFile = remapJar
-    additionalFiles = [sourcesJar]
+    uploadFile = remapJar.archiveFile
+    additionalFiles = [sourcesJar.archiveFile]
     //noinspection GroovyAssignabilityCheck
     gameVersions = project.release_versions.split(" ").toList()
     loaders = ["fabric", "quilt"]
     dependencies {
-
+        required.project "carpet"
+        required.project "fabric-api"
     }
     syncBodyFrom = rootProject.file("README.md").text
     changelog = rootProject.file("CHANGELOG.md").text
@@ -182,34 +183,35 @@ modrinth {
 githubRelease {
     token = project.findProperty("githubToken")
     owner = project.repo_owner
-    repo = project.mod_id
+    repo = project.archives_base_name
     tagName = "v${project.mod_version}"
     targetCommitish = "multi"
     releaseName = "${project.mod_name} ${project.mod_version}"
     body = rootProject.file("CHANGELOG.md").text
-    draft = mcVersion > 11605 // first file should be false
-    releaseAssets = [remapJar, sourcesJar]
+    draft = mcVersion > 11701 // first file should be false
+    releaseAssets = [remapJar.archiveFile, sourcesJar.archiveFile]
     prerelease = project.release_type != "release"
     allowUploadToExisting = true // allows publishing multiple files
     dryRun = debug
 }
 
-tasks.register("curseforge", TaskPublishCurseForge) {
-    group "publishing"
-    disableVersionDetection()
-    apiToken = project.findProperty("curseforgeToken")
-
-    def mainFile = upload(project.project_id, remapJar)
-    mainFile.releaseType = release_type
-    mainFile.displayName = "${project.mod_name} ${project.mod_version} for ${project.title_version}"
-    mainFile.changelog = rootProject.file("CHANGELOG.md").text
-    mainFile.changelogType = "markdown"
-    mainFile.addModLoader "fabric", "quilt"
-    for (String version : project.release_versions.split(" ")) {
-        mainFile.addGameVersion version
-    }
-    debugMode = debug
-}
+// Curseforgeless
+//tasks.register("curseforge", TaskPublishCurseForge) {
+//    group "publishing"
+//    disableVersionDetection()
+//    apiToken = project.findProperty("curseforgeToken")
+//
+//    def mainFile = upload(project.project_id, remapJar.archiveFile)
+//    mainFile.releaseType = release_type
+//    mainFile.displayName = "${project.mod_name} ${project.mod_version} for ${project.title_version}"
+//    mainFile.changelog = rootProject.file("CHANGELOG.md").text
+//    mainFile.changelogType = "markdown"
+//    mainFile.addModLoader "fabric", "quilt"
+//    for (String version : project.release_versions.split(" ")) {
+//        mainFile.addGameVersion version
+//    }
+//    debugMode = debug
+//}
 
 // configure the maven publication
 publishing {

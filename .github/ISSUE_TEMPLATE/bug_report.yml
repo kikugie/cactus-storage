@@ -1,6 +1,6 @@
 name: Bug Report
 description: Something doesn't seem correct and it might be a bug
-labels: []
+labels: [bug]
 body:
   - type: textarea
     id: description
@@ -58,7 +58,7 @@ body:
     id: mod-version
     attributes:
       label: TemplateMod version
-      description: The TemplateMod version(s) where this bug occurs in.
+      description: The Cactus Storage version(s) where this bug occurs in.
       placeholder: 1.2.3
     validations:
       required: true
