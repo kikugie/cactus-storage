@@ -4,6 +4,7 @@
   "package": "dev.kikugie.cactus_storage.mixin",
   "compatibilityLevel": "JAVA_8",
   "mixins": [
+    "BlockMixin",
     "CactusBlockMixin",
     "HopperMinecartEntityMixin",
     "ItemEntityMixin",

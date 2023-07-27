@@ -11,7 +11,11 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
 @Mixin(CactusBlock.class)
-public class CactusBlockMixin {
+public abstract class CactusBlockMixin extends Block {
+    public CactusBlockMixin(Settings settings) {
+        super(settings);
+    }
+
     @WrapOperation(method = "canPlaceAt", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/BlockState;isOf(Lnet/minecraft/block/Block;)Z", ordinal = 0))
     private boolean cactus_storage$allowPlacingOnHopper(BlockState instance, Block block, Operation<Boolean> original) {
         if (CactusStorageSettings.allowCactusOnHoppers
@@ -19,5 +23,4 @@ public class CactusBlockMixin {
             return true;
         return original.call(instance, block);
     }
-
 }

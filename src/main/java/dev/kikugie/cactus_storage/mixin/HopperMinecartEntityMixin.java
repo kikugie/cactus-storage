@@ -26,14 +26,12 @@ public class HopperMinecartEntityMixin {
      * @return True if extraction was successful.
      */
     @SuppressWarnings("UnstableApiUsage")
-    @WrapOperation(method = "canOperate", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/HopperBlockEntity;extract(Lnet/minecraft/block/entity/Hopper;)Z", ordinal = 0))
-    private boolean cactus_storage$pullFromCactusStorage(Hopper hopper, Operation<Boolean> original) {
-        boolean result = original.call(hopper);
+    @WrapOperation(method = "canOperate", at = @At(value = "INVOKE", target = "Lnet/minecraft/block/entity/HopperBlockEntity;extract(Lnet/minecraft/world/World;Lnet/minecraft/block/entity/Hopper;)Z", ordinal = 0))
+    private boolean cactus_storage$pullFromCactusStorage(World world, Hopper hopper, Operation<Boolean> original) {
+        boolean result = original.call(world, hopper);
         if (result)
             return true;
 
-        World world = hopper.getWorld();
-        assert world != null;
         BlockPos invPos = new BlockPos(hopper.getHopperX(), Math.ceil(hopper.getHopperY()), hopper.getHopperZ());
         BlockState target = world.getBlockState(invPos);
         BlockState target2 = world.getBlockState(invPos.offset(Direction.UP));

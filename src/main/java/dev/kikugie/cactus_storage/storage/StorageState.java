@@ -24,12 +24,27 @@ public class StorageState extends PersistentState {
     }
 
     public StorageState() {
-        super(Reference.MOD_ID);
+        super();
     }
 
-    @Override
-    public void fromTag(NbtCompound tag) {
+    public static StorageState fromNbt(NbtCompound tag, PersistentStateManager manager) {
         CactusStorage.load(tag);
+        try {
+            instance = getOrCreate(manager);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return instance;
+    }
+
+    public static StorageState create(PersistentStateManager manager) {
+        CactusStorage.create();
+        try {
+            instance = getOrCreate(manager);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return instance;
     }
 
     @Override

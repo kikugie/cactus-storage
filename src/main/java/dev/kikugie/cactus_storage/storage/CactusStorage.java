@@ -7,8 +7,10 @@ import net.fabricmc.fabric.api.transfer.v1.item.ItemVariant;
 import net.fabricmc.fabric.api.transfer.v1.storage.Storage;
 import net.fabricmc.fabric.api.transfer.v1.storage.StoragePreconditions;
 import net.fabricmc.fabric.api.transfer.v1.storage.StorageView;
+import net.fabricmc.fabric.api.transfer.v1.storage.base.ExtractionOnlyStorage;
 import net.fabricmc.fabric.api.transfer.v1.transaction.TransactionContext;
 import net.fabricmc.fabric.api.transfer.v1.transaction.base.SnapshotParticipant;
+import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.nbt.NbtLong;
@@ -16,22 +18,25 @@ import net.minecraft.util.math.Direction;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Iterator;
-import java.util.Objects;
+import java.util.*;
 
 @SuppressWarnings("UnstableApiUsage")
-public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> implements Storage<ItemVariant> {
+public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> implements ExtractionOnlyStorage<ItemVariant> {
     private static final String STORAGE_KEY = "storage";
     private static CactusStorage GLOBAL_STORAGE;
     private Contents contents;
 
-    public CactusStorage(Contents contents) {
+    private CactusStorage(Contents contents) {
         this.contents = contents;
     }
 
     public static void load(NbtCompound nbt) {
         NbtList list = nbt.getList(STORAGE_KEY, nbt.getType());
         GLOBAL_STORAGE = new CactusStorage(Contents.deserialize(list));
+    }
+
+    public static void create() {
+        GLOBAL_STORAGE = new CactusStorage(new Contents(new Object2LongOpenHashMap<>()));
     }
 
     public static NbtCompound save(NbtCompound nbt) {
@@ -49,6 +54,15 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
         return GLOBAL_STORAGE;
     }
 
+    public static Optional<CactusStorage> getInstance() {
+        return Optional.ofNullable(GLOBAL_STORAGE);
+    }
+
+    public List<ItemStack> clear() {
+        List<ItemStack> items = contents.unpack();
+        contents.entries.clear();
+        return items;
+    }
 
     @Override
     protected void onFinalCommit() {
@@ -63,11 +77,6 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
     @Override
     protected void readSnapshot(Contents snapshot) {
         this.contents = snapshot;
-    }
-
-    @Override
-    public boolean supportsInsertion() {
-        return false;
     }
 
     @Override
@@ -206,6 +215,31 @@ public class CactusStorage extends SnapshotParticipant<CactusStorage.Contents> i
          */
         public long get(ItemVariant variant) {
             return this.entries.getOrDefault(variant, 0L);
+        }
+
+        /**
+         * @return Randomized list of items stacks stored in this storage.
+         */
+        public List<ItemStack> unpack() {
+            ArrayList<ItemStack> items = new ArrayList<>(entries.size());
+
+            for (ItemVariant variant : entries.keySet()) {
+                long count = entries.getLong(variant);
+                items.addAll(split(variant, count));
+            }
+            Collections.shuffle(items);
+            return items;
+        }
+
+        private Collection<ItemStack> split(ItemVariant variant, long count) {
+            if (variant.isBlank())
+                return Collections.emptyList();
+
+            int maxCount = variant.getItem().getMaxCount();
+            ArrayList<ItemStack> items = new ArrayList<>();
+            for (long i = count; i > 0; i -= maxCount)
+                items.add(new ItemStack(variant.getItem(), Math.min((int) i, maxCount)));
+            return items;
         }
     }
 }

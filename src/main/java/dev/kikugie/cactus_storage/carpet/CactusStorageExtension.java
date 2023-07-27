@@ -3,7 +3,6 @@ package dev.kikugie.cactus_storage.carpet;
 import carpet.CarpetExtension;
 import carpet.CarpetServer;
 import dev.kikugie.cactus_storage.Reference;
-import net.minecraft.server.MinecraftServer;
 
 public class CactusStorageExtension implements CarpetExtension {
     public static final CactusStorageExtension INSTANCE = new CactusStorageExtension();

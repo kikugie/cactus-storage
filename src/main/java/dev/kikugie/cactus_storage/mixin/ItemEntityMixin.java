@@ -34,15 +34,15 @@ public abstract class ItemEntityMixin extends Entity {
      * @param cir Mixin callback info. Not used.
      */
     @SuppressWarnings("UnstableApiUsage")
-    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;remove()V"))
+    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;discard()V"))
     private void cactus_storage$addToCactusStorage(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         if (!CactusStorageSettings.cactusStorage
                 || source != DamageSource.CACTUS
-                || this.getEntityWorld() instanceof ServerWorld)
+                || !(this.getEntityWorld() instanceof ServerWorld))
             return;
 
+        ItemStack stack = getStack();
         try (Transaction transaction = Transaction.openOuter()) {
-            ItemStack stack = getStack();
             CactusStorage.get().insert(ItemVariant.of(stack), stack.getCount(), transaction);
             transaction.commit();
         }
