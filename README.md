@@ -100,6 +100,9 @@ If multiple hoppers pull items from the storage, changes are processed sequentia
 ### Oriol:
 > ME REPRESENTAAAA this feels so catibular, doesn't it? Me he fumado una alcachofa!
 
+### Kartoffel:
+> It's almost as good as \[REDACTED]
+
 ### Ilmango:
 > *Your message could not be delivered. This is usually because you don't share a server with the recipient or the recipient is only accepting direct messages from friends.*
 
