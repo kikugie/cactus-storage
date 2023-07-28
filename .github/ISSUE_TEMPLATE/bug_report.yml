@@ -57,7 +57,7 @@ body:
   - type: input
     id: mod-version
     attributes:
-      label: TemplateMod version
+      label: Cactus Storage version
       description: The Cactus Storage version(s) where this bug occurs in.
       placeholder: 1.2.3
     validations:
